@@ -39,6 +39,31 @@ class TradeLog:
                 )
                 """
             )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS session_meta (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL
+                )
+                """
+            )
+
+    def get_meta(self, key: str) -> str | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT value FROM session_meta WHERE key = ?", (key,)
+            ).fetchone()
+            return None if row is None else str(row["value"])
+
+    def set_meta(self, key: str, value: str) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO session_meta(key, value) VALUES(?, ?)
+                ON CONFLICT(key) DO UPDATE SET value = excluded.value
+                """,
+                (key, value),
+            )
 
     def record(self, *, dry_run: bool, payload: dict, result: dict | None = None) -> None:
         with self._connect() as conn:

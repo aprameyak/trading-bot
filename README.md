@@ -25,6 +25,7 @@ python run.py
 | `MAX_POSITION_FRACTION` | `0.10` |
 | `AGGRESSIVE_TAKER` | `false` |
 | `CONFIRM_LIVE` | empty |
+| `MAX_DAILY_LOSS_FRACTION` | `0.10` |
 
 ## License
 

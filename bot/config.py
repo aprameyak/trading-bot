@@ -34,6 +34,7 @@ class Settings:
     max_hours_to_close: float
     aggressive_taker: bool
     confirm_live: str
+    max_daily_loss_fraction: float
     data_dir: Path
 
     @classmethod
@@ -68,6 +69,7 @@ class Settings:
             aggressive_taker=os.getenv("AGGRESSIVE_TAKER", "false").strip().lower()
             in {"1", "true", "yes"},
             confirm_live=os.getenv("CONFIRM_LIVE", "").strip(),
+            max_daily_loss_fraction=float(os.getenv("MAX_DAILY_LOSS_FRACTION", "0.10")),
             data_dir=ROOT / "data",
         )
 
@@ -86,3 +88,5 @@ class Settings:
             raise ValueError("MIN_EDGE and MIN_CONFIDENCE must be >= 0")
         if self.kalshi_env == "prod" and not self.dry_run and self.confirm_live != "I_UNDERSTAND":
             raise ValueError('Live prod requires CONFIRM_LIVE=I_UNDERSTAND')
+        if not (0 < self.max_daily_loss_fraction <= 1):
+            raise ValueError("MAX_DAILY_LOSS_FRACTION must be in (0, 1]")

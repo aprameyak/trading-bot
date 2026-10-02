@@ -50,6 +50,21 @@ def run_cycle(settings: Settings) -> None:
     executor = Executor(client, settings, log)
 
     bankroll = balance_dollars(client)
+    start_raw = log.get_meta("session_start_bankroll")
+    if start_raw is None:
+        log.set_meta("session_start_bankroll", str(bankroll))
+        start_bankroll = bankroll
+    else:
+        start_bankroll = Decimal(start_raw)
+
+    if start_bankroll > 0:
+        drawdown = (start_bankroll - bankroll) / start_bankroll
+        if drawdown >= Decimal(str(settings.max_daily_loss_fraction)):
+            raise SystemExit(
+                f"Halted: drawdown {drawdown:.1%} >= "
+                f"MAX_DAILY_LOSS_FRACTION={settings.max_daily_loss_fraction}"
+            )
+
     console.print(
         f"[bold]Cycle[/bold] env={settings.kalshi_env} dry_run={settings.dry_run} "
         f"bankroll=${bankroll}"

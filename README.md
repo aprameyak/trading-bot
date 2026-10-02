@@ -1,10 +1,10 @@
-# Kalshi Local Trading Bot
+# Kalshi local trading bot
 
-Local auto-trader: scans Kalshi, estimates odds with Claude, sizes with Kelly, places orders. Defaults to demo + dry-run.
+Scans Kalshi markets, estimates odds with Claude, sizes with Kelly, places orders. Defaults: demo API + `DRY_RUN=true`.
 
-## Disclaimer
+## Warning
 
-Not financial advice. You can lose money. LLM probability estimates are not trading edge. Defaults are aggressive (`KELLY_FRACTION=0.75`, `AGGRESSIVE_TAKER=true`) and intended for dry-run experimentation only. Keep `DRY_RUN=true` until you understand the risk model.
+Not financial advice. You can lose money. Model estimates are not edge. Defaults (`KELLY_FRACTION=0.75`, `AGGRESSIVE_TAKER=true`) are aggressive — leave dry-run on until you understand the risk code.
 
 ## Setup
 
@@ -15,21 +15,21 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-1. Set `ANTHROPIC_API_KEY` in `.env`
-2. Create a demo API key at https://demo.kalshi.co → Profile → API Keys
-3. Save the PEM as `keys/kalshi.pem` and set `KALSHI_API_KEY_ID`
+1. Set `ANTHROPIC_API_KEY`
+2. Demo API key from https://demo.kalshi.co → Profile → API Keys
+3. Save PEM as `keys/kalshi.pem` and set `KALSHI_API_KEY_ID`
 
-Never commit PEM files or `.env`.
+Do not commit PEMs or `.env`.
 
 ```bash
 python check_setup.py
 python run.py
 ```
 
-## Go live
+## Live
 
 1. Demo with `DRY_RUN=false` until fills look right
-2. Production key from https://kalshi.com, then:
+2. Prod key from https://kalshi.com:
 
 ```
 KALSHI_ENV=prod
@@ -51,7 +51,7 @@ DRY_RUN=false
 | `POLL_INTERVAL_SECONDS` | `90` |
 | `AGGRESSIVE_TAKER` | `true` |
 
-Decisions log to `data/trades.sqlite3`. Keep the process running locally (Terminal or tmux).
+Logs to `data/trades.sqlite3`.
 
 ## License
 

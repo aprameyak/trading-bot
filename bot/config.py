@@ -33,6 +33,7 @@ class Settings:
     max_position_fraction: float
     max_hours_to_close: float
     aggressive_taker: bool
+    confirm_live: str
     data_dir: Path
 
     @classmethod
@@ -61,11 +62,12 @@ class Settings:
             min_volume_24h=float(os.getenv("MIN_VOLUME_24H", "50")),
             min_edge=float(os.getenv("MIN_EDGE", "0.06")),
             min_confidence=float(os.getenv("MIN_CONFIDENCE", "0.55")),
-            kelly_fraction=float(os.getenv("KELLY_FRACTION", "0.75")),
-            max_position_fraction=float(os.getenv("MAX_POSITION_FRACTION", "0.35")),
+            kelly_fraction=float(os.getenv("KELLY_FRACTION", "0.25")),
+            max_position_fraction=float(os.getenv("MAX_POSITION_FRACTION", "0.10")),
             max_hours_to_close=float(os.getenv("MAX_HOURS_TO_CLOSE", "720")),
-            aggressive_taker=os.getenv("AGGRESSIVE_TAKER", "true").strip().lower()
+            aggressive_taker=os.getenv("AGGRESSIVE_TAKER", "false").strip().lower()
             in {"1", "true", "yes"},
+            confirm_live=os.getenv("CONFIRM_LIVE", "").strip(),
             data_dir=ROOT / "data",
         )
 
@@ -82,3 +84,5 @@ class Settings:
             raise ValueError("KELLY_FRACTION and MAX_POSITION_FRACTION must be > 0")
         if self.min_edge < 0 or self.min_confidence < 0:
             raise ValueError("MIN_EDGE and MIN_CONFIDENCE must be >= 0")
+        if self.kalshi_env == "prod" and not self.dry_run and self.confirm_live != "I_UNDERSTAND":
+            raise ValueError('Live prod requires CONFIRM_LIVE=I_UNDERSTAND')

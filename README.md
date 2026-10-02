@@ -4,7 +4,7 @@ Scans Kalshi markets, estimates odds with Claude, sizes with Kelly, places order
 
 ## Warning
 
-Not financial advice. You can lose money. Model estimates are not edge. Defaults (`KELLY_FRACTION=0.75`, `AGGRESSIVE_TAKER=true`) are aggressive — leave dry-run on until you understand the risk code.
+Not financial advice. You can lose money. Model estimates are not edge. Defaults are conservative (`KELLY_FRACTION=0.25`, `AGGRESSIVE_TAKER=false`). Live prod also requires `CONFIRM_LIVE=I_UNDERSTAND`.
 
 ## Setup
 
@@ -45,11 +45,12 @@ DRY_RUN=false
 | `DRY_RUN` | `true` |
 | `MIN_EDGE` | `0.06` |
 | `MIN_CONFIDENCE` | `0.55` |
-| `KELLY_FRACTION` | `0.75` |
-| `MAX_POSITION_FRACTION` | `0.35` |
+| `KELLY_FRACTION` | `0.25` |
+| `MAX_POSITION_FRACTION` | `0.10` |
 | `MAX_HOURS_TO_CLOSE` | `720` |
 | `POLL_INTERVAL_SECONDS` | `90` |
-| `AGGRESSIVE_TAKER` | `true` |
+| `AGGRESSIVE_TAKER` | `false` |
+| `CONFIRM_LIVE` | empty (required `I_UNDERSTAND` for live prod) |
 
 Logs to `data/trades.sqlite3`.
 

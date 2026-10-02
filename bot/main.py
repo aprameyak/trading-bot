@@ -89,6 +89,10 @@ def main() -> None:
         f"Model: {settings.anthropic_model}"
     )
     if settings.kalshi_env == "prod" and not settings.dry_run:
+        if settings.confirm_live != "I_UNDERSTAND":
+            raise SystemExit(
+                "Refusing live prod. Set CONFIRM_LIVE=I_UNDERSTAND to continue."
+            )
         console.print(
             "[bold red]LIVE PRODUCTION MODE[/bold red] — real money will be risked."
         )

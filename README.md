@@ -1,11 +1,14 @@
-# Kalshi Local Profit Bot
+# Kalshi Local Trading Bot
 
 Local auto-trader: scans Kalshi, estimates odds with Claude, sizes with Kelly, places orders. Defaults to demo + dry-run.
+
+## Disclaimer
+
+Not financial advice. You can lose money. LLM probability estimates are not trading edge. Defaults are aggressive (`KELLY_FRACTION=0.75`, `AGGRESSIVE_TAKER=true`) and intended for dry-run experimentation only. Keep `DRY_RUN=true` until you understand the risk model.
 
 ## Setup
 
 ```bash
-cd trading-bot
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -15,6 +18,8 @@ cp .env.example .env
 1. Set `ANTHROPIC_API_KEY` in `.env`
 2. Create a demo API key at https://demo.kalshi.co → Profile → API Keys
 3. Save the PEM as `keys/kalshi.pem` and set `KALSHI_API_KEY_ID`
+
+Never commit PEM files or `.env`.
 
 ```bash
 python check_setup.py
@@ -47,3 +52,7 @@ DRY_RUN=false
 | `AGGRESSIVE_TAKER` | `true` |
 
 Decisions log to `data/trades.sqlite3`. Keep the process running locally (Terminal or tmux).
+
+## License
+
+MIT

@@ -11,11 +11,23 @@ from bot.brain import Brain
 from bot.config import Settings
 from bot.executor import Executor, balance_dollars
 from bot.kalshi_client import KalshiClient
-from bot.risk import size_ideas
+from bot.risk import resolve_day_start_bankroll, should_halt_for_loss, size_ideas
 from bot.scanner import scan_markets
 from bot.store import TradeLog
 
 console = Console()
+
+
+def _day_start_bankroll(log: TradeLog, bankroll: Decimal) -> Decimal:
+    day, start, wrote = resolve_day_start_bankroll(
+        stored_day=log.get_meta("pnl_day"),
+        stored_start=log.get_meta("day_start_bankroll"),
+        bankroll=bankroll,
+    )
+    if wrote:
+        log.set_meta("pnl_day", day)
+        log.set_meta("day_start_bankroll", str(start))
+    return start
 
 
 def _print_ideas(ideas) -> None:
@@ -50,20 +62,15 @@ def run_cycle(settings: Settings) -> None:
     executor = Executor(client, settings, log)
 
     bankroll = balance_dollars(client)
-    start_raw = log.get_meta("session_start_bankroll")
-    if start_raw is None:
-        log.set_meta("session_start_bankroll", str(bankroll))
-        start_bankroll = bankroll
-    else:
-        start_bankroll = Decimal(start_raw)
-
-    if start_bankroll > 0:
+    start_bankroll = _day_start_bankroll(log, bankroll)
+    if should_halt_for_loss(
+        start_bankroll, bankroll, settings.max_daily_loss_fraction
+    ):
         drawdown = (start_bankroll - bankroll) / start_bankroll
-        if drawdown >= Decimal(str(settings.max_daily_loss_fraction)):
-            raise SystemExit(
-                f"Halted: drawdown {drawdown:.1%} >= "
-                f"MAX_DAILY_LOSS_FRACTION={settings.max_daily_loss_fraction}"
-            )
+        raise SystemExit(
+            f"Halted: drawdown {drawdown:.1%} >= "
+            f"MAX_DAILY_LOSS_FRACTION={settings.max_daily_loss_fraction}"
+        )
 
     console.print(
         f"[bold]Cycle[/bold] env={settings.kalshi_env} dry_run={settings.dry_run} "
@@ -99,7 +106,7 @@ def run_cycle(settings: Settings) -> None:
 def main() -> None:
     settings = Settings.from_env()
     console.print(
-        "[bold cyan]Kalshi profit bot[/bold cyan]\n"
+        "[bold cyan]Kalshi bot[/bold cyan]\n"
         f"Env: {settings.kalshi_env} | Dry-run: {settings.dry_run} | "
         f"Model: {settings.anthropic_model}"
     )

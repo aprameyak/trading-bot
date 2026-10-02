@@ -87,6 +87,6 @@ class Settings:
         if self.min_edge < 0 or self.min_confidence < 0:
             raise ValueError("MIN_EDGE and MIN_CONFIDENCE must be >= 0")
         if self.kalshi_env == "prod" and not self.dry_run and self.confirm_live != "I_UNDERSTAND":
-            raise ValueError('Live prod requires CONFIRM_LIVE=I_UNDERSTAND')
+            raise ValueError("Live prod requires CONFIRM_LIVE=I_UNDERSTAND")
         if not (0 < self.max_daily_loss_fraction <= 1):
             raise ValueError("MAX_DAILY_LOSS_FRACTION must be in (0, 1]")

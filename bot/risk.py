@@ -1,10 +1,39 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date, datetime, timezone
 from decimal import Decimal, ROUND_DOWN
 
 from bot.brain import TradeIdea
 from bot.config import Settings
+
+
+def drawdown_fraction(start: Decimal, current: Decimal) -> Decimal:
+    if start <= 0:
+        return Decimal("0")
+    return (start - current) / start
+
+
+def should_halt_for_loss(
+    start: Decimal, current: Decimal, max_fraction: float
+) -> bool:
+    if start <= 0:
+        return False
+    return drawdown_fraction(start, current) >= Decimal(str(max_fraction))
+
+
+def resolve_day_start_bankroll(
+    *,
+    stored_day: str | None,
+    stored_start: str | None,
+    bankroll: Decimal,
+    today: date | None = None,
+) -> tuple[str, Decimal, bool]:
+    """Return (day_iso, day_start_bankroll, wrote_new_baseline)."""
+    day = (today or datetime.now(timezone.utc).date()).isoformat()
+    if stored_day != day or stored_start is None:
+        return day, bankroll, True
+    return day, Decimal(stored_start), False
 
 
 @dataclass

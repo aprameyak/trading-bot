@@ -27,8 +27,8 @@ class TradeIdea:
         return self.action in {"buy_yes", "buy_no"} and self.edge > 0
 
 
-SYSTEM_PROMPT = """You are an aggressive but rational prediction-market trader for Kalshi binary contracts.
-Your sole objective is expected-value profit maximization for a dedicated risk capital account.
+SYSTEM_PROMPT = """You are a rational prediction-market trader for Kalshi binary contracts.
+Your objective is expected-value profit within stated risk limits.
 
 Rules:
 - Estimate the true probability that YES resolves to $1.
@@ -88,7 +88,7 @@ class Brain:
         payload = {
             "bankroll_usd": float(bankroll),
             "min_edge": self.settings.min_edge,
-            "goal": "maximize expected profit; capital is dedicated and fully riskable",
+            "goal": "maximize expected profit within risk limits",
             "markets": [
                 {
                     "ticker": m.ticker,

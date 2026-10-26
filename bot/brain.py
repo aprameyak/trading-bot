@@ -66,13 +66,14 @@ def _extract_json(text: str) -> Any:
 
 
 def _edge_for(action: str, fair: float, market: Market) -> float:
+    from bot.risk import fee_adjusted_edge
+
     if action == "buy_yes":
-        return fair - float(market.yes_ask)
+        return fee_adjusted_edge(fair, market.yes_ask)
     if action == "buy_no":
         if market.yes_bid <= 0:
             return -1.0
-        no_ask = 1.0 - float(market.yes_bid)
-        return (1.0 - fair) - no_ask
+        return fee_adjusted_edge(1.0 - fair, Decimal("1") - market.yes_bid)
     return 0.0
 
 

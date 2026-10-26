@@ -6,8 +6,13 @@ from rich.console import Console
 
 from bot.brain import TradeIdea
 from bot.config import Settings
-from bot.kalshi_client import KalshiClient
-from bot.risk import SizedTrade, size_trade
+from bot.kalshi_client import KalshiClient, _d
+from bot.risk import (
+    SizedTrade,
+    fee_adjusted_edge,
+    position_value,
+    size_trade,
+)
 from bot.scanner import refresh_market
 from bot.store import TradeLog
 
@@ -36,12 +41,14 @@ class Executor:
             market=fresh,
         )
         if idea.action == "buy_yes":
-            idea.edge = idea.fair_yes_prob - float(fresh.yes_ask)
+            idea.edge = fee_adjusted_edge(idea.fair_yes_prob, fresh.yes_ask)
         else:
             if fresh.yes_bid <= 0:
                 console.print(f"[dim]Skip {idea.ticker}: no usable NO ask[/dim]")
                 return None
-            idea.edge = (1.0 - idea.fair_yes_prob) - (1.0 - float(fresh.yes_bid))
+            idea.edge = fee_adjusted_edge(
+                1.0 - idea.fair_yes_prob, Decimal("1") - fresh.yes_bid
+            )
 
         if idea.edge < self.settings.min_edge:
             console.print(
@@ -102,3 +109,29 @@ def balance_dollars(client: KalshiClient) -> Decimal:
     if bal.get("balance_dollars") is not None:
         return Decimal(str(bal["balance_dollars"]))
     return Decimal(bal.get("balance", 0)) / Decimal(100)
+
+
+def open_positions(client: KalshiClient) -> dict[str, dict]:
+    held: dict[str, dict] = {}
+    cursor = None
+    while True:
+        data = client.get_positions(cursor=cursor)
+        for pos in data.get("market_positions") or []:
+            if _d(pos.get("position_fp")) != 0:
+                held[pos["ticker"]] = pos
+        cursor = data.get("cursor")
+        if not cursor:
+            return held
+
+
+def positions_value(client: KalshiClient, positions: dict[str, dict]) -> Decimal:
+    total = Decimal("0")
+    for ticker, pos in positions.items():
+        raw = client.get_market(ticker)
+        total += position_value(
+            _d(pos.get("position_fp")),
+            _d(pos.get("market_exposure_dollars")),
+            _d(raw.get("yes_bid_dollars")),
+            _d(raw.get("yes_ask_dollars")),
+        )
+    return total

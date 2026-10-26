@@ -150,6 +150,12 @@ class KalshiClient:
             params["cursor"] = cursor
         return self.request("GET", "/events", params=params, auth=False)
 
+    def get_positions(self, *, cursor: str | None = None) -> dict:
+        params: dict[str, Any] = {"limit": 200, "count_filter": "position"}
+        if cursor:
+            params["cursor"] = cursor
+        return self.request("GET", "/portfolio/positions", params=params)
+
     def get_market(self, ticker: str) -> dict:
         return self.request("GET", f"/markets/{ticker}", auth=False).get("market", {})
 

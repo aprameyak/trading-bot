@@ -9,9 +9,19 @@ from rich.table import Table
 
 from bot.brain import Brain
 from bot.config import Settings
-from bot.executor import Executor, balance_dollars
+from bot.executor import (
+    Executor,
+    balance_dollars,
+    open_positions,
+    positions_value,
+)
 from bot.kalshi_client import KalshiClient
-from bot.risk import resolve_day_start_bankroll, should_halt_for_loss, size_ideas
+from bot.risk import (
+    resolve_day_start_bankroll,
+    should_halt_for_loss,
+    size_ideas,
+    unheld_markets,
+)
 from bot.scanner import scan_markets
 from bot.store import TradeLog
 
@@ -62,11 +72,13 @@ def run_cycle(settings: Settings) -> None:
     executor = Executor(client, settings, log)
 
     bankroll = balance_dollars(client)
-    start_bankroll = _day_start_bankroll(log, bankroll)
+    positions = open_positions(client)
+    equity = bankroll + positions_value(client, positions)
+    start_equity = _day_start_bankroll(log, equity)
     if should_halt_for_loss(
-        start_bankroll, bankroll, settings.max_daily_loss_fraction
+        start_equity, equity, settings.max_daily_loss_fraction
     ):
-        drawdown = (start_bankroll - bankroll) / start_bankroll
+        drawdown = (start_equity - equity) / start_equity
         raise SystemExit(
             f"Halted: drawdown {drawdown:.1%} >= "
             f"MAX_DAILY_LOSS_FRACTION={settings.max_daily_loss_fraction}"
@@ -77,7 +89,7 @@ def run_cycle(settings: Settings) -> None:
         f"bankroll=${bankroll}"
     )
 
-    markets = scan_markets(client, settings)
+    markets = unheld_markets(scan_markets(client, settings), positions)
     console.print(f"Scanning {len(markets)} liquid markets…")
     if not markets:
         console.print("[dim]No markets passed filters this cycle.[/dim]")

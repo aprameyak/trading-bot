@@ -2,10 +2,41 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
-from decimal import Decimal, ROUND_DOWN
+from decimal import Decimal, ROUND_CEILING, ROUND_DOWN
 
 from bot.brain import TradeIdea
 from bot.config import Settings
+from bot.kalshi_client import Market
+
+
+def kalshi_fee(contracts: int, price: Decimal) -> Decimal:
+    raw = Decimal("0.07") * Decimal(contracts) * price * (Decimal("1") - price)
+    return raw.quantize(Decimal("0.01"), rounding=ROUND_CEILING)
+
+
+def fee_adjusted_edge(p: float, price: Decimal, contracts: int = 1) -> float:
+    fee_per_contract = kalshi_fee(contracts, price) / Decimal(contracts)
+    return p - float(price) - float(fee_per_contract)
+
+
+def position_value(
+    position: Decimal, cost: Decimal, yes_bid: Decimal, yes_ask: Decimal
+) -> Decimal:
+    if yes_bid > 0 and 0 < yes_ask < 1:
+        price = (yes_bid + yes_ask) / 2
+    elif 0 < yes_ask < 1:
+        price = yes_ask
+    elif yes_bid > 0:
+        price = yes_bid
+    else:
+        return cost
+    if position >= 0:
+        return position * price
+    return -position * (Decimal("1") - price)
+
+
+def unheld_markets(markets: list[Market], held: dict) -> list[Market]:
+    return [m for m in markets if m.ticker not in held]
 
 
 def drawdown_fraction(start: Decimal, current: Decimal) -> Decimal:
